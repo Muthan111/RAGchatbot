@@ -9,7 +9,8 @@ export class ChatbotController {
   @ApiOperation({ summary: 'Chat with the bot' })
   @ApiBody({
     type: ChatRequest,
-    description: 'The chat request containing the user message and optional conversation ID',
+    description:
+      'The chat request containing the user message and optional conversation ID',
   })
   @Post()
   async chat(@Body() request: ChatRequest) {
