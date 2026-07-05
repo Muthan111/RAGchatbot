@@ -7,7 +7,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getEnvFilePaths } from './config/env-paths';
 @Module({
-  imports: [BookModule, ChatbotModule,
+  imports: [
+    BookModule,
+    ChatbotModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: getEnvFilePaths(),
