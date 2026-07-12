@@ -6,43 +6,42 @@ import { ToolExecutor } from './ToolExecutor';
 import { GeminiModel } from './gemini';
 import { GoogleGenerativeAI, Content, Part } from '@google/generative-ai';
 import { toolDeclarations } from './ToolDeclaration';
+import { ConversationStore } from './ConversationStore';
 
-const MAX_TOOL_ITERATIONS = 5;
 @Injectable()
 export class ChatOrchestrator {
-  private readonly genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
   constructor(
     private readonly promptBuilder: PromptBuilder,
     // private readonly toolExecutor: ToolExecutor,
     private readonly geminiModel: GeminiModel,
+    private readonly conversationStore: ConversationStore
   ) {}
   async chat(request: ChatRequest): Promise<ChatResponse> {
-    // Build prompt from user input
-    const prompt = this.promptBuilder.build(request.message);
+    // 1. Get or create the conversation session
+    const conversation = this.conversationStore.getOrCreate(request.conversationId);
 
-    //  Initiate model
-    // const model = this.genAI.getGenerativeModel({
-    //   model: 'gemini-2.5-flash',
-    //   systemInstruction: this.promptBuilder.buildSystemInstruction(),
-    //   tools: [{ functionDeclarations: toolDeclarations }],
-    // });
+    // 2. Merge history with the new message
+    const contents = this.promptBuilder.buildContents(conversation.history, request.message);
+    // Build prompt from user input
+    // const prompt = this.promptBuilder.build(request.message);
     const model = this.geminiModel.initializeModel(
       this.promptBuilder.buildSystemInstruction(),
       toolDeclarations,
     );
-    // const contents: Content[] = prompt.map((p) => ({
-    //   role: p.role,
-    //   parts: [{ text: p.content }],
-    // }));
-    const initialContents  = this.geminiModel.initializeContents(prompt);
-    
-    const { reply, conversationId, contents} = await this.geminiModel.generateResponse(
-      model,
-      initialContents,
-      request,
-    );
-    console.log("initiai"+ initialContents)
-    console.log('Final contents:', contents);
-    return { reply, conversationId };
+
+    // 4. Run the tool-calling loop
+    const { reply } = await this.geminiModel.generateResponse(model, contents, {
+      ...request,
+      conversationId: conversation.id,
+    });
+
+    // 5. Persist ONLY the clean user + model turns — not tool call noise
+    const userContent = this.promptBuilder.buildUserContent(request.message);
+    const modelContent = { role: 'model' as const, parts: [{ text: reply }] };
+    this.conversationStore.appendTurn(conversation.id, userContent, modelContent);
+
+    return { reply, conversationId: conversation.id };
+
+
   }
 }

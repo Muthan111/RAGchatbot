@@ -6,9 +6,17 @@ import { ChatOrchestrator } from './chatOrchestrator';
 import { ToolExecutor } from './ToolExecutor';
 import { BookModule } from '../book/book.module';
 import { GeminiModel } from './gemini';
+import { ConversationStore } from './ConversationStore';
 @Module({
   imports: [BookModule],
-  providers: [ChatbotService, PromptBuilder, ChatOrchestrator, ToolExecutor, GeminiModel],
+  providers: [
+    ChatbotService,
+    PromptBuilder,
+    ChatOrchestrator,
+    ToolExecutor,
+    GeminiModel,
+    ConversationStore,
+  ],
   controllers: [ChatbotController],
 })
 export class ChatbotModule {}

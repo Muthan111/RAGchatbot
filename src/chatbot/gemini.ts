@@ -36,9 +36,9 @@ export class GeminiModel {
         if (functionCallParts.length === 0) {
           const replyText = response.text();
           contents.push({
-              role: 'model',
-              parts: [{ text: replyText }],
-            });
+            role: 'model',
+            parts: [{ text: replyText }],
+          });
           return {
             reply: replyText,
             conversationId: request.conversationId ?? '',
@@ -70,10 +70,11 @@ export class GeminiModel {
         });
         iterations++;
       }
-      console.log("initiai"+ initialContents)
-      console.log("final"+ contents)
+      console.log('initiai' + initialContents);
+      console.log('final' + contents);
       return {
-        reply: 'Unable to complete the request after multiple tool calls. Please rephrase your question.',
+        reply:
+          'Unable to complete the request after multiple tool calls. Please rephrase your question.',
         conversationId: request.conversationId ?? '',
         contents,
       };
